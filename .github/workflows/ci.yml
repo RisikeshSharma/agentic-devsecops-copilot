@@ -1,0 +1,34 @@
+name: "Agent Evaluation & Terraform Validation"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python_test:
+    name: "Python Lint & Swarm Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python agent.py
+
+  terraform_check:
+    name: "Terraform IaC Validation"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+      - run: terraform fmt -check
+      - run: terraform init -backend=false
+      - run: terraform validate
